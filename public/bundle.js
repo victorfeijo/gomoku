@@ -42,11 +42,13 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _enum = __webpack_require__(1);
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
@@ -86,8 +88,22 @@
 	document.getElementById('log').addEventListener('click', foo.log.bind(foo));
 	
 	$('#alert').click(function () {
-	  alert('jquery is working');
+	  alert(_enum.Enum.BOARD_ROWS_NUMBER);
 	});
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var Enum = exports.Enum = {
+	  BOARD_ROWS_NUMBER: 15,
+	  BOARD_COLUMNS_NUMBER: 15
+	};
 
 /***/ }
 /******/ ]);

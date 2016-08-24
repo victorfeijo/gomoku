@@ -1,21 +1,26 @@
-class Foo {
-  constructor(some) {
-    this.some = some
+import { Enum } from './enum'
+
+class Gomoku {
+
+  constructor(playerName) {
+    this.playerName = playerName
+    this.whoStart = Math.round(Math.random())
   }
 
-  log() {
-    console.log(this.some)
+  setup() {
+    // create board, pieces, set initial state to game, etc
   }
 
-  alert() {
-    alert(this.some)
+  start() {
+    // main loop game
+  }
+
+  reset() {
+    // reset game
   }
 }
 
-let foo = new Foo('Foo')
-document.getElementById('log').addEventListener('click', foo.log.bind(foo))
-
 $('#alert').click(() => {
-  alert('jquery is working')
+  alert(Enum.BOARD_ROWS_NUMBER)
 })
 
