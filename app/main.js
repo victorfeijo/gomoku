@@ -13,6 +13,9 @@ class Foo {
 }
 
 let foo = new Foo('Foo')
-document.getElementById('alert').addEventListener('click', foo.alert.bind(foo))
 document.getElementById('log').addEventListener('click', foo.log.bind(foo))
+
+$('#alert').click(() => {
+  alert('jquery is working')
+})
 
