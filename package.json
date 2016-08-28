@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prestart": "webpack",
     "start": "babel-node index.js --presets es2015,stage-2"
   },
   "repository": {
