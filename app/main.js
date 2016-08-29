@@ -20,10 +20,21 @@ class Gomoku {
     // main loop game
     this.board.forEach((value, i, j, board) => {
       $('canvas').drawArc({
+        layer: true,
         draggable: true,
         fillStyle: "green",
         x: 60*i, y: 60*j,
         radius: 10,
+        mouseover: function(layer) {
+          $(this).animateLayer(layer, {
+            fillStyle: '#c33'
+          }, 500);
+        },
+        mouseout: function(layer) {
+          $(this).animateLayer(layer, {
+            fillStyle: '#fff'
+          }, 500);
+        },
       });
     })
   }

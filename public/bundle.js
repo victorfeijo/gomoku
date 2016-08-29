@@ -81,10 +81,21 @@
 	      // main loop game
 	      this.board.forEach(function (value, i, j, board) {
 	        $('canvas').drawArc({
+	          layer: true,
 	          draggable: true,
 	          fillStyle: "green",
 	          x: 60 * i, y: 60 * j,
-	          radius: 10
+	          radius: 10,
+	          mouseover: function mouseover(layer) {
+	            $(this).animateLayer(layer, {
+	              fillStyle: '#c33'
+	            }, 500);
+	          },
+	          mouseout: function mouseout(layer) {
+	            $(this).animateLayer(layer, {
+	              fillStyle: '#fff'
+	            }, 500);
+	          }
 	        });
 	      });
 	    }
