@@ -20,9 +20,10 @@ class Gomoku {
     // main loop game
     this.board.forEach((value, i, j, board) => {
       $('canvas').drawArc({
-        fillStyle: 'black',
-        x: i*80, y: j*100,
-        radius: 5
+        draggable: true,
+        fillStyle: "green",
+        x: 60*i, y: 60*j,
+        radius: 10,
       });
     })
   }
@@ -35,4 +36,3 @@ class Gomoku {
 const gomoku = new Gomoku()
 gomoku.setup()
 gomoku.start()
-

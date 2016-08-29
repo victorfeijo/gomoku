@@ -15,7 +15,7 @@ class Board {
 
   forEach(func) {
     for(let i=0; i<Enum.BOARD_ROWS_NUMBER; i++) {
-      for(let j=0; i<Enum.BOARD_ROWS_NUMBER; i++) {
+      for(let j=0; j<Enum.BOARD_COLUMNS_NUMBER; j++) {
         func(this.board[i][j], i, j, this.board)
       }
     }

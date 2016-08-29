@@ -81,9 +81,10 @@
 	      // main loop game
 	      this.board.forEach(function (value, i, j, board) {
 	        $('canvas').drawArc({
-	          fillStyle: 'black',
-	          x: i * 80, y: j * 100,
-	          radius: 5
+	          draggable: true,
+	          fillStyle: "green",
+	          x: 60 * i, y: 60 * j,
+	          radius: 10
 	        });
 	      });
 	    }
@@ -150,7 +151,7 @@
 	    key: 'forEach',
 	    value: function forEach(func) {
 	      for (var i = 0; i < _enum.Enum.BOARD_ROWS_NUMBER; i++) {
-	        for (var j = 0; i < _enum.Enum.BOARD_ROWS_NUMBER; i++) {
+	        for (var j = 0; j < _enum.Enum.BOARD_COLUMNS_NUMBER; j++) {
 	          func(this.board[i][j], i, j, this.board);
 	        }
 	      }
