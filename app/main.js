@@ -53,7 +53,7 @@ class Gomoku {
     this.board.forEach((value, i, j) => {
       $('canvas').drawRect({
         layer: true,
-        draggable: true,
+        draggable: false,
         x: 35*(i+.5),
         y: 35*(j+.5),
         width: 35,
@@ -91,7 +91,7 @@ class Gomoku {
     let color = this.player[playerId].color
     $('canvas').drawArc({
       layer: true,
-      draggable: true,
+      draggable: false,
       x: 35*(i+.5),
       y: 35*(j+.5),
       radius: 15,
