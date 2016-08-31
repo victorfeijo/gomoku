@@ -1,11 +1,16 @@
 body {
+  background-image: url("img/wood_table.png");
   font-family: monospace;
-  color: #FF07F5;
+  text-shadow: 0 0 2px #fff;
+  color: #811;
   text-align: center;
   margin: 0;
 }
 
 canvas {
-  background-color: #EEE; 
+  background-image: url("img/purty_wood.png");
+  background-color: #EEE;
+  border: 0.3em solid #633;
+  box-shadow: 0.1em 0.2em 0.5em rgba(0, 0, 0, 0.5);
+  border-radius: 0.5em;
 }
-
