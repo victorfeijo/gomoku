@@ -1,102 +1,132 @@
-import { Players } from './players'
+import { Players } from './enum'
 import { Enum } from './enum'
-import { Type } from './type'
+import { Type } from './enum'
 import Board from './board'
 import Player from './player'
 
+const CELL_WIDTH = Enum.BOARD_WIDTH / Enum.BOARD_COLUMNS_NUMBER
+const CELL_HEIGHT = Enum.BOARD_HEIGHT / Enum.BOARD_ROWS_NUMBER
+
 class Gomoku {
 
-  constructor(playerName) {
-    // this.playerName = playerName
-    this.board = new Board()
-    // this.whoStart = Math.round(Math.random())
-  }
+  constructor() {}
 
   setup() {
     // create board, pieces, set initial state to game, etc
-    this.player = new Array(2)
-    this.player[Players.ONE] = new Player("P1", Type.HUMAN, "#222")
-    this.player[Players.TWO] = new Player("P2", Type.HUMAN, "#eee")
-    this.draw()
-    this.addCells()
-    this.board.switchPlayer()
+    this.player = {}
+    this.player[Players.ONE] = new Player("Preto", Type.HUMAN, "#222")
+    this.player[Players.TWO] = new Player("Branco", Type.HUMAN, "#eee")
+    this.drawBg()
   }
 
   start() {
-    // main loop game
+    // main game
+    this.board = new Board()
+    this.drawCells()
+    if (this.isAiRound()) {
+      Ai.think()  // TODO
+    }
   }
 
   reset() {
     // reset game
   }
 
-  draw() {
-    for (let i=0; i<Enum.BOARD_COLUMNS_NUMBER-1; i++) {
-      for (let j=0; j<Enum.BOARD_ROWS_NUMBER-1; j++) {
-        $('canvas').drawRect({
-          layer: true,
-          draggable: false,
-          strokeStyle: '#422',
-          strokeWidth: 2,
-          x: 35*(i+1),
-          y: 35*(j+1),
-          width: 35,
-          height: 35
-        })
-      }
-    }
-  }
-
-  addCells() {
-    let gomoku = this
-    let board = this.board
-    this.board.forEach((value, i, j) => {
+  drawBg() {
+    for (let i=0; i<Enum.BOARD_COLUMNS_NUMBER-1; i++)
+    for (let j=0; j<Enum.BOARD_ROWS_NUMBER-1; j++) {
       $('canvas').drawRect({
         layer: true,
         draggable: false,
-        x: 35*(i+.5),
-        y: 35*(j+.5),
-        width: 35,
-        height: 35,
-        fillStyle: 'rgba(30, 150, 30, 0)',
-        mouseover: function(layer) {
-          if (gomoku.player[board.currentPlayer].type == Type.HUMAN) {
-            $(this).animateLayer(layer, {
-              fillStyle: 'rgba(30, 150, 30, 0.3)'
-            }, Enum.ANIMATIONS_DURATION)
-          }
-        },
-        mouseout: function(layer) {
-          if (gomoku.player[board.currentPlayer].type == Type.HUMAN) {
-            $(this).animateLayer(layer, {
-              fillStyle: 'rgba(30, 150, 30, 0)'
-            }, Enum.ANIMATIONS_DURATION)
-          }
-        },
-        click: function(layer) {
-          if (gomoku.player[board.currentPlayer].type == Type.HUMAN) {
-            $(this).animateLayer(layer, {
-              fillStyle: 'rgba(30, 150, 30, 0)'
-            }, Enum.ANIMATIONS_DURATION)
-            $(this).removeLayer(layer)
-            gomoku.addPiece(i, j, board.currentPlayer)
-          }
-        },
+        strokeStyle: '#422',
+        strokeWidth: 2,
+        x: CELL_WIDTH*(i+1),
+        y: CELL_HEIGHT*(j+1),
+        width: CELL_WIDTH,
+        height: CELL_HEIGHT
       })
+    }
+  }
+
+  drawCells() {
+    this.board.forEach((value, i, j) => {
+      if (value == Players.NONE) {
+        this.drawEmptyCell(i, j)
+      } else {
+        this.drawPiece(i, j, value)
+      }
     })
   }
 
-  addPiece(i, j, playerId) {
-    this.board.set(i, j, playerId)
+  drawEmptyCell(i, j) {
+    let currentPlayer = this.player[this.board.currentPlayer()]
+    let gomoku = this
+    $('canvas').drawRect({
+      layer: true,
+      draggable: false,
+      x: CELL_WIDTH*(i+.5),
+      y: CELL_HEIGHT*(j+.5),
+      width: CELL_WIDTH,
+      height: CELL_HEIGHT,
+      fillStyle: currentPlayer.color,
+      opacity: 0,
+      mouseover: function(layer) {
+        if (currentPlayer.type == Type.HUMAN) {
+          $(this).animateLayer(layer, {
+            opacity: 0.4
+          }, Enum.ANIMATIONS_DURATION)
+        }
+      },
+      mouseout: function(layer) {
+        $(this).animateLayer(layer, {
+          opacity: 0
+        }, Enum.ANIMATIONS_DURATION)
+      },
+      click: function(layer) {
+        if (currentPlayer.type == Type.HUMAN) {
+          $(this).animateLayer(layer, {
+            opacity: 0
+          }, Enum.ANIMATIONS_DURATION)
+          gomoku.addPiece(i, j)
+        }
+      },
+    })
+  }
+
+  drawPiece(i, j, playerId) {
     let color = this.player[playerId].color
     $('canvas').drawArc({
       layer: true,
       draggable: false,
-      x: 35*(i+.5),
-      y: 35*(j+.5),
-      radius: 15,
+      x: CELL_WIDTH*(i+.5),
+      y: CELL_HEIGHT*(j+.5),
+      radius: (CELL_WIDTH-5)/2,
       fillStyle: color
     })
+  }
+
+  addPiece(i, j) {
+    this.board = this.board.addPiece(i, j)
+    $('canvas').removeLayers()
+    this.drawBg()
+    this.drawCells()
+    let winner = this.board.getWinner()
+    if (winner != null) {
+      if (winner == Players.NONE) {
+        alert('DRAW')
+      } else {
+        let name = this.player[winner]
+        alert('WINNER:\n'+name)
+      }
+    } else if (this.isAiRound()) {
+      Ai.think()  // TODO
+    }
+  }
+
+  isAiRound() {
+    let currentId = this.board.currentPlayer()
+    let currentPlayer = this.player[currentId]
+    return currentPlayer.type == Type.AI
   }
 }
 
