@@ -1,6 +1,7 @@
 import { Players, Enum, Type } from './enum'
 import Board from './board'
 import Player from './player'
+import Ai from './ai'
 
 const CELL_WIDTH = Enum.BOARD_WIDTH / Enum.BOARD_COLUMNS_NUMBER
 const CELL_HEIGHT = Enum.BOARD_HEIGHT / Enum.BOARD_ROWS_NUMBER
@@ -14,8 +15,9 @@ class Gomoku {
     $('#reset').hide()
     $('#reset').click(() => { this.reset() })
     this.player = {}
+    this.ai = new Ai()
     this.player[Players.ONE] = new Player("Black", Type.HUMAN, "#222")
-    this.player[Players.TWO] = new Player("White", Type.HUMAN, "#eee")
+    this.player[Players.TWO] = new Player("White", Type.AI, "#eee")
     this.drawBg()
   }
 
@@ -23,8 +25,10 @@ class Gomoku {
     // main game
     this.board = new Board()
     this.drawCells()
+    console.log(this.board.currentPlayer())
     if (this.isAiRound()) {
-      Ai.think()  // TODO
+      const play = this.ai.think(this.board)  // TODO
+      this.addPiece(play.i, play.j)
     }
   }
 
@@ -116,6 +120,11 @@ class Gomoku {
     $('canvas').clearCanvas()
     this.drawBg()
     this.drawCells()
+
+    console.log(`add piece : ${this.board.currentPlayer()}`)
+
+    // this.ai.avaliate(this.board)
+
     let winner = this.board.winner()
     if (winner != null) {
       let text
@@ -130,14 +139,17 @@ class Gomoku {
         $('#reset').show()
       }, 250)
     } else if (this.isAiRound()) {
-      Ai.think()  // TODO
+      // TODO
+      const aiPlay = this.ai.think(this.board)
+      this.addPiece(aiPlay.i, aiPlay.j)
     }
   }
 
   isAiRound() {
-    let currentId = this.board.currentPlayer()
-    let currentPlayer = this.player[currentId]
-    return currentPlayer.type == Type.AI
+    const currentId = this.board.currentPlayer()
+    const currentPlayer = this.player[currentId]
+
+    return currentPlayer.type === Type.AI
   }
 }
 
