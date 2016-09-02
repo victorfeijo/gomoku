@@ -1,32 +1,27 @@
-import { Enum } from './enum'
-import { Players } from './enum'
+import { Enum, Players } from './enum'
 
 class Board {
 
-  constructor(cells, player, size) {
+  constructor(cells, player, size, winner) {
+    this.cells = cells
     if (cells == null){
-      let _emptyMapObj = {}
+      let emptyMapObj = {}
       for (let i=0; i<Enum.BOARD_COLUMNS_NUMBER; i++)
       for (let j=0; j<Enum.BOARD_ROWS_NUMBER; j++) {
         let key = this.formatKey(i,j)
-        _emptyMapObj[key] = Players.NONE
+        emptyMapObj[key] = Players.NONE
       }
-      this.cells = new Immutable.Map(_emptyMapObj)
-    } else {
-      this.cells = cells
+      this.cells = new Immutable.Map(emptyMapObj)
     }
 
-    let _currentPlayer = player
-    if (player == null) {
-      _currentPlayer = Math.round(Math.random())
-    }
-    this.currentPlayer = () => { return _currentPlayer }
+    if (player == null) { player = Math.round(Math.random()) }
+    if (winner != null) { player = Players.NONE }
+    this.currentPlayer = () => { return player }
 
-    let _size = size
-    if (size == null) {
-      _size = 0
-    }
-    this.size = () => { return _size }
+    size = size || 0
+    this.size = () => { return size }
+
+    this.winner = () => { return winner }
   }
 
   forEach(func) {
@@ -53,15 +48,15 @@ class Board {
 
   addPiece(x, y) {
     let key = this.formatKey(x, y)
-    if (this.cells.get(key) == Players.NONE) {
+    if (this.cells.get(key) == Players.NONE && this.winner() == null) {
       let player = this.currentPlayer()
       let newCells = this.cells.set(key, player)
       let newPlayer = this.switchPlayer(player)
       let newSize = this.size()+1
-      return new Board(newCells, newPlayer, newSize)
-    } else {
-      return this
+      let winner = this.getWinner(x, y, newCells, newSize)
+      return new Board(newCells, newPlayer, newSize, winner)
     }
+    return this
   }
 
   get(i, j, func) {
@@ -82,16 +77,38 @@ class Board {
     return '.' + num
   }
 
-  getWinner(lastX, lastY) {
-    // TODO
-    // SEARCH ADJACENT PIECES
-    // if (piece at (lastX, lastY) is in a line of five of the same player)
-    //   ṛeturn player from (lastX, lastY)
-    if (this.size() == (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
-      return Players.NONE
-    } else {
-      return null
+  getWinner(lastX, lastY, cells, size) {
+    let winnerId = null
+    let key = this.formatKey(lastX, lastY)
+    let possibleWinnerId = cells.get(key)
+    let searchPaths = [[0, 1], [1, 0], [1, 1], [1, -1]]
+    searchPaths.forEach(path => {
+      let count = 0
+      let x = lastX, y = lastY
+      for (let i = 0; i < 2; i++) {
+        key = this.formatKey(x, y)
+        while (cells.get(key) == possibleWinnerId) {
+          count ++
+          x += path[0]
+          y += path[1]
+          key = this.formatKey(x, y)
+        }
+        if (i == 0) {
+          path = path.map(n => { return n*-1 })
+          x = lastX + path[0]
+          y = lastY + path[1]
+        }
+      }
+      if (count >= 5) {
+        winnerId = possibleWinnerId
+      }
+    })
+    if (winnerId == null) {
+      if (size == (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
+        winnerId = Players.NONE
+      }
     }
+    return winnerId
   }
 }
 

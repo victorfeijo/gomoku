@@ -1,6 +1,4 @@
-import { Players } from './enum'
-import { Enum } from './enum'
-import { Type } from './enum'
+import { Players, Enum, Type } from './enum'
 import Board from './board'
 import Player from './player'
 
@@ -13,9 +11,11 @@ class Gomoku {
 
   setup() {
     // create board, pieces, set initial state to game, etc
+    $('#reset').hide()
+    $('#reset').click(() => { this.reset() })
     this.player = {}
-    this.player[Players.ONE] = new Player("Preto", Type.HUMAN, "#222")
-    this.player[Players.TWO] = new Player("Branco", Type.HUMAN, "#eee")
+    this.player[Players.ONE] = new Player("Black", Type.HUMAN, "#222")
+    this.player[Players.TWO] = new Player("White", Type.HUMAN, "#eee")
     this.drawBg()
   }
 
@@ -30,6 +30,10 @@ class Gomoku {
 
   reset() {
     // reset game
+    $('canvas').removeLayers()
+    $('canvas').clearCanvas()
+    this.setup()
+    this.start()
   }
 
   drawBg() {
@@ -59,38 +63,39 @@ class Gomoku {
   }
 
   drawEmptyCell(i, j) {
-    let currentPlayer = this.player[this.board.currentPlayer()]
-    let gomoku = this
-    $('canvas').drawRect({
-      layer: true,
-      draggable: false,
-      x: CELL_WIDTH*(i+.5),
-      y: CELL_HEIGHT*(j+.5),
-      width: CELL_WIDTH,
-      height: CELL_HEIGHT,
-      fillStyle: currentPlayer.color,
-      opacity: 0,
-      mouseover: function(layer) {
-        if (currentPlayer.type == Type.HUMAN) {
-          $(this).animateLayer(layer, {
-            opacity: 0.4
-          }, Enum.ANIMATIONS_DURATION)
-        }
-      },
-      mouseout: function(layer) {
-        $(this).animateLayer(layer, {
-          opacity: 0
-        }, Enum.ANIMATIONS_DURATION)
-      },
-      click: function(layer) {
-        if (currentPlayer.type == Type.HUMAN) {
-          $(this).animateLayer(layer, {
-            opacity: 0
-          }, Enum.ANIMATIONS_DURATION)
-          gomoku.addPiece(i, j)
-        }
-      },
-    })
+    let currentPlayerId = this.board.currentPlayer()
+    if (currentPlayerId != Players.NONE) {
+      let currentPlayer = this.player[currentPlayerId]
+      if (currentPlayer.type == Type.HUMAN) {
+        let gomoku = this
+        $('canvas').drawRect({
+          layer: true,
+          draggable: false,
+          x: CELL_WIDTH*(i+.5),
+          y: CELL_HEIGHT*(j+.5),
+          width: CELL_WIDTH,
+          height: CELL_HEIGHT,
+          fillStyle: currentPlayer.color,
+          opacity: 0,
+          mouseover: function(layer) {
+            $(this).animateLayer(layer, {
+              opacity: 0.4
+            }, Enum.ANIMATIONS_DURATION)
+          },
+          mouseout: function(layer) {
+            $(this).animateLayer(layer, {
+              opacity: 0
+            }, Enum.ANIMATIONS_DURATION)
+          },
+          click: function(layer) {
+            $(this).animateLayer(layer, {
+              opacity: 0
+            }, Enum.ANIMATIONS_DURATION)
+            gomoku.addPiece(i, j)
+          },
+        })
+      }
+    }
   }
 
   drawPiece(i, j, playerId) {
@@ -108,16 +113,22 @@ class Gomoku {
   addPiece(i, j) {
     this.board = this.board.addPiece(i, j)
     $('canvas').removeLayers()
+    $('canvas').clearCanvas()
     this.drawBg()
     this.drawCells()
-    let winner = this.board.getWinner()
+    let winner = this.board.winner()
     if (winner != null) {
+      let text
       if (winner == Players.NONE) {
-        alert('DRAW')
+        text = 'DRAW'
       } else {
-        let name = this.player[winner]
-        alert('WINNER:\n'+name)
+        let name = this.player[winner].name
+        text = 'WINNER:\n' + name
       }
+      setTimeout(() => {
+        alert(text)
+        $('#reset').show()
+      }, 250)
     } else if (this.isAiRound()) {
       Ai.think()  // TODO
     }
