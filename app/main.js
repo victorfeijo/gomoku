@@ -132,6 +132,7 @@ class Gomoku {
     } else if (this.isAiRound()) {
       Ai.think()  // TODO
     }
+    console.log(this.board.evaluate(Players.ONE))
   }
 
   isAiRound() {

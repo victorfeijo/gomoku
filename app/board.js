@@ -2,7 +2,8 @@ import { Enum, Players } from './enum'
 
 class Board {
 
-  constructor(cells, player, size, winner) {
+  constructor(cells, player, size, winner = null) {
+    // class constructor
     this.cells = cells
     if (cells == null){
       let emptyMapObj = {}
@@ -25,6 +26,7 @@ class Board {
   }
 
   forEach(func) {
+    // apply function for each element of this.cells
     for(let i=0; i<Enum.BOARD_ROWS_NUMBER; i++)
     for(let j=0; j<Enum.BOARD_COLUMNS_NUMBER; j++) {
       let key = this.formatKey(i, j)
@@ -33,6 +35,7 @@ class Board {
   }
 
   switchPlayer(player) {
+    // receives a player id and returns the next player id
     switch (player) {
       case Players.ONE:
         player = Players.TWO
@@ -47,6 +50,7 @@ class Board {
   }
 
   addPiece(x, y) {
+    // returns the new board after adding a piece on the position received
     let key = this.formatKey(x, y)
     if (this.cells.get(key) == Players.NONE && this.winner() == null) {
       let player = this.currentPlayer()
@@ -60,16 +64,19 @@ class Board {
   }
 
   get(i, j, func) {
+    // aply function on the received position
     let key = this.formatKey(i, j)
     func(this.cells.get(key))
   }
 
   formatKey(x, y) {
+    // transform (x,y) position to an unique identifier key
     let len = Enum.KEY_LENGTH / 2
     return this.fixLength(x, len) + this.fixLength(y, len)
   }
 
   fixLength(num, length) {
+    // transform number into a string with the determined length
     num = num.toString()
     while (num.length < length) {
       num = '0' + num
@@ -77,38 +84,79 @@ class Board {
     return '.' + num
   }
 
-  getWinner(lastX, lastY, cells, size) {
-    let winnerId = null
-    let key = this.formatKey(lastX, lastY)
-    let possibleWinnerId = cells.get(key)
-    let searchPaths = [[0, 1], [1, 0], [1, 1], [1, -1]]
+  getMaxSet(iX, iY, cells = this.cells) {
+    // return an array containing the biggest set of the same player
+    // and the number of adjacent free sides
+    let maxSet = [new Set(), 0]
+    let key = this.formatKey(iX, iY)
+    const initialPlayerId = cells.get(key)
+    const searchPaths = [[0, 1], [1, 0], [1, 1], [1, -1]]
     searchPaths.forEach(path => {
-      let count = 0
-      let x = lastX, y = lastY
+      let freeSides = 0
+      let currentSet = new Set()
+      let x = iX, y = iY
       for (let i = 0; i < 2; i++) {
         key = this.formatKey(x, y)
-        while (cells.get(key) == possibleWinnerId) {
-          count ++
+        while (cells.get(key) === initialPlayerId) {
+          currentSet.add([x, y])
           x += path[0]
           y += path[1]
           key = this.formatKey(x, y)
         }
+        if (cells.get(key) == Players.NONE) {
+          freeSides ++
+        }
         if (i == 0) {
           path = path.map(n => { return n*-1 })
-          x = lastX + path[0]
-          y = lastY + path[1]
+          x = iX + path[0]
+          y = iY + path[1]
         }
       }
-      if (count >= 5) {
-        winnerId = possibleWinnerId
+      if (currentSet.size > maxSet[0].size) {
+        maxSet = [currentSet, freeSides]
       }
     })
-    if (winnerId == null) {
-      if (size == (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
-        winnerId = Players.NONE
-      }
+    return maxSet
+  }
+
+  getWinner(lastX, lastY, cells, boardSize) {
+    // returns null or the id of the winner on the received conditions
+    let winnerId = null
+    const key = this.formatKey(lastX, lastY)
+    const possibleWinnerId = cells.get(key)
+    if (this.getMaxSet(lastX, lastY, cells)[0].size >= 5) {
+      winnerId = possibleWinnerId
+    } else if (boardSize == (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
+      winnerId = Players.NONE
     }
     return winnerId
+  }
+
+  evaluate(maxPlayer) {
+    // returns a grade to the player based on the current state
+    let grade = 0, moves = 0
+    let visitedCells = new Set()
+    this.forEach((playerId, i, j) => {
+      if (playerId !== Players.NONE && !visitedCells.has([i,j])) {
+        moves++
+        let maxSet = this.getMaxSet(i, j)
+        let freeSides = maxSet[1]
+        maxSet = maxSet[0]
+        if (maxSet.size >= 3) {
+          let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
+          if (maxSet.size >= 5) { setGrade *= 100 }
+          if (playerId !== maxPlayer) { setGrade *= -1.5 }
+          grade += setGrade
+          maxSet.forEach(cell => { visitedCells.add(cell) })
+        }
+      }
+    })
+    if (this.winner() === maxPlayer) {
+      grade -= 2 * moves
+    } else if (this.winner() === this.switchPlayer(maxPlayer)) {
+      grade += 2 * moves
+    }
+    return grade
   }
 }
 
