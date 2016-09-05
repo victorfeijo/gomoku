@@ -138,7 +138,6 @@ class Board {
     let visitedCells = new Set()
     this.forEach((playerId, i, j) => {
       if (playerId !== Players.NONE && !visitedCells.has([i,j])) {
-        moves++
         let maxSet = this.getMaxSet(i, j)
         let freeSides = maxSet[1]
         maxSet = maxSet[0]
@@ -147,7 +146,10 @@ class Board {
           if (maxSet.size >= 5) { setGrade *= 100 }
           if (playerId !== maxPlayer) { setGrade *= -1.5 }
           grade += setGrade
-          maxSet.forEach(cell => { visitedCells.add(cell) })
+          maxSet.forEach((cell) => { visitedCells.add(cell) })
+          moves += maxSet.size
+        } else {
+          moves++
         }
       }
     })
