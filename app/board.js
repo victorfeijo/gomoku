@@ -52,12 +52,22 @@ class Board {
   addPiece(x, y) {
     // returns the new board after adding a piece on the position received
     let key = this.formatKey(x, y)
-    if (this.cells.get(key) == Players.NONE && this.winner() == null) {
-      let player = this.currentPlayer()
-      let newCells = this.cells.set(key, player)
-      let newPlayer = this.switchPlayer(player)
-      let newSize = this.size()+1
-      let winner = this.getWinner(x, y, newCells, newSize)
+
+    console.log(key)
+    console.log(this.cells.get(key))
+    console.log(this.winner() === null)
+
+    if (this.cells.get(key) === Players.NONE && this.winner() === null) {
+      const player = this.currentPlayer()
+      const newCells = this.cells.set(key, player)
+      const newPlayer = this.switchPlayer(player)
+      const newSize = this.size()+1
+      const winner = this.getWinner(x, y, newCells, newSize)
+
+      console.log(player)
+      console.log(newCells)
+      console.log(newPlayer)
+
       return new Board(newCells, newPlayer, newSize, winner)
     }
     return this
