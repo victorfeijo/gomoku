@@ -16,7 +16,7 @@ class Ai {
     }
   }
 
-  minMax() {
+  miniMax() {
   }
 
   evaluate(maxPlayer, board) {
