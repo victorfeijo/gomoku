@@ -31,6 +31,7 @@ class Ai {
         if (maxSet.size >= 3) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
           if (maxSet.size >= 5) { setGrade *= 100 }
+          if (playerId !== maxPlayer) { setGrade *= -1 }
           grade += setGrade
           maxSet.forEach((cell) => { visitedCells.add(cell) })
           moves += maxSet.size
