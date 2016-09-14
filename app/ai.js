@@ -10,6 +10,18 @@ class Ai {
     let i = Math.round(Math.random()*Enum.BOARD_ROWS_NUMBER)
     let j = Math.round(Math.random()*Enum.BOARD_COLUMNS_NUMBER)
 
+    let possibleBoards = this.possibilities(board)
+
+    possibleBoards.forEach((board, key) => {
+      if (this.evaluate(Players.ONE, board) > 0) {
+
+        return {
+          i: parseInt(key.slice(0, 2)),
+          j: parseInt(key.slice(2, 4))
+        }
+      }
+    })
+
     return {
       i: i,
       j: j,
@@ -17,6 +29,20 @@ class Ai {
   }
 
   miniMax() {
+  }
+
+  possibilities(board) {
+    let possibleBoards = new Map()
+    board.forEach((playerId, i, j) => {
+      if (playerId === Players.NONE) {
+        let key = board.formatKey(i, j)
+        let possibleBoard = board.addPiece(i, j)
+
+        possibleBoards.set(key, possibleBoard)
+      }
+    })
+
+    return possibleBoards
   }
 
   evaluate(maxPlayer, board) {
