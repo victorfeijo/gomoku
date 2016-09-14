@@ -135,8 +135,10 @@ class Gomoku {
       }, 250)
     } else if (this.isAiRound()) {
       // TODO
-      const aiMove = this.ai.think(this.board)
-      this.addPiece(aiMove.i, aiMove.j)
+      setTimeout(() => {
+        const aiMove = this.ai.think(this.board)
+        this.addPiece(aiMove.i, aiMove.j)
+      }, 0)
     }
     console.log(this.ai.evaluate(Players.ONE, this.board))
   }

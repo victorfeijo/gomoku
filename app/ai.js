@@ -10,6 +10,7 @@ class Ai {
     let i = Math.round(Math.random()*Enum.BOARD_ROWS_NUMBER)
     let j = Math.round(Math.random()*Enum.BOARD_COLUMNS_NUMBER)
 
+    let time = new Date().getTime()
     let possibleBoards = this.possibilities(board)
 
     possibleBoards.forEach((board, key) => {
@@ -31,7 +32,33 @@ class Ai {
   miniMax() {
   }
 
+  middleBorderOrderedPossibilities(board) {
+    let i = (Enum.BOARD_COLUMNS_NUMBER / 2) | 0
+    let j = (Enum.BOARD_ROWS_NUMBER / 2) | 0
+    let directions = [[0,1], [1,0], [0,-1], [-1,0]]
+    let n = 0, distance = 1, direction = 0
+    let keyArray = []
+    while (n < Enum.BOARD_COLUMNS_NUMBER * Enum.BOARD_ROWS_NUMBER) {
+      for(let k=0; k<distance; k++) {
+        n ++
+        // TODO inserir no mapa somente se não há jogador na casa
+        keyArray[n] = [i, j]
+        let step = directions[direction % 4]
+        i += step[0]
+        j += step[1]
+      }
+      direction++
+      if (n > 0 && n%2 == 0) {
+        distance++
+      }
+      
+    }
+    
+    console.log(keyArray)
+  }
+  
   possibilities(board) {
+    this.middleBorderOrderedPossibilities(board)
     let possibleBoards = new Map()
     board.forEach((playerId, i, j) => {
       if (playerId === Players.NONE) {
