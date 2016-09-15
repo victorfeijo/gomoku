@@ -7,42 +7,66 @@ class Ai {
   }
 
   think(board) {
-    let i = Math.round(Math.random()*Enum.BOARD_ROWS_NUMBER)
-    let j = Math.round(Math.random()*Enum.BOARD_COLUMNS_NUMBER)
-
-    let time = new Date().getTime()
-    let possibleBoards = this.possibilities(board)
-
-    possibleBoards.forEach((board, key) => {
-      if (this.evaluate(Players.ONE, board) > 0) {
-
-        return {
-          i: parseInt(key.slice(0, 2)),
-          j: parseInt(key.slice(2, 4))
-        }
-      }
-    })
-
+    let move = this.miniMax(2, board, board.currentPlayer, -Infinity, +Infinity).index
+    console.log(move)
     return {
-      i: i,
-      j: j,
+      i: move[0],
+      j: move[1],
     }
   }
 
-  miniMax() {
+  miniMax(depth, board, maxPlayer, alpha, beta) {
+    let possibleIndex = this.orderedPossibilities(board)
+    let bestPosition = [-1, -1]
+    let score
+    
+    if (possibleIndex.length == 0 || depth == 0 || board.winner() != null) {
+      score = this.evaluate(maxPlayer, board)
+      return {
+        score: score,
+        index: bestPosition
+      }
+    } else {
+      for (let i=0; i < possibleIndex.length; i++) {
+        let index = possibleIndex[i]
+        let newBoard = board.addPiece(index[0], index[1])
+        if (board.currentPlayer() == maxPlayer) {
+          score = this.miniMax(depth-1, newBoard, maxPlayer, alpha, beta).score
+          if (score > alpha) {
+            alpha = score
+            bestPosition = index
+          }
+        } else {
+          score = this.miniMax(depth-1, newBoard, maxPlayer, alpha, beta).score
+          if (score < beta) {
+            beta = score
+            bestPosition = index
+          }
+        }
+        if (alpha > beta) {
+          break
+        }
+      }
+      return {
+        score: (board.currentPlayer() == maxPlayer) ? alpha : beta,
+        index: bestPosition
+      }
+    }
   }
 
-  middleBorderOrderedPossibilities(board) {
+  orderedPossibilities(board) {
     let i = (Enum.BOARD_COLUMNS_NUMBER / 2) | 0
     let j = (Enum.BOARD_ROWS_NUMBER / 2) | 0
     let directions = [[0,1], [1,0], [0,-1], [-1,0]]
-    let n = 0, distance = 1, direction = 0
+    let n = 0, index = 0, distance = 1, direction = 0
     let keyArray = []
     while (n < Enum.BOARD_COLUMNS_NUMBER * Enum.BOARD_ROWS_NUMBER) {
       for(let k=0; k<distance; k++) {
         n ++
-        // TODO inserir no mapa somente se não há jogador na casa
-        keyArray[n] = [i, j]
+        const isPossible = board.get(i,j) == Players.NONE
+        if (isPossible) {
+          keyArray[index++] = [i, j]
+        }
         let step = directions[direction % 4]
         i += step[0]
         j += step[1]
@@ -53,23 +77,11 @@ class Ai {
       }
       
     }
-    
-    console.log(keyArray)
+    return keyArray
   }
   
   possibilities(board) {
-    this.middleBorderOrderedPossibilities(board)
-    let possibleBoards = new Map()
-    board.forEach((playerId, i, j) => {
-      if (playerId === Players.NONE) {
-        let key = board.formatKey(i, j)
-        let possibleBoard = board.addPiece(i, j)
-
-        possibleBoards.set(key, possibleBoard)
-      }
-    })
-
-    return possibleBoards
+    return this.orderedPossibilities(board)
   }
 
   evaluate(maxPlayer, board) {

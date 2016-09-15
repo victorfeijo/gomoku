@@ -140,7 +140,6 @@ class Gomoku {
         this.addPiece(aiMove.i, aiMove.j)
       }, 0)
     }
-    console.log(this.ai.evaluate(Players.ONE, this.board))
   }
 
   isAiRound() {
