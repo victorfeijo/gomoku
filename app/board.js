@@ -63,10 +63,10 @@ class Board {
     return this
   }
 
-  get(i, j, func) {
+  get(i, j) {
     // aply function on the received position
     let key = this.formatKey(i, j)
-    func(this.cells.get(key))
+    return this.cells.get(key)
   }
 
   formatKey(x, y) {

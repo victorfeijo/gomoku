@@ -7,16 +7,82 @@ class Ai {
   }
 
   think(board) {
-    let i = Math.round(Math.random()*Enum.BOARD_ROWS_NUMBER)
-    let j = Math.round(Math.random()*Enum.BOARD_COLUMNS_NUMBER)
-
+    let move = this.miniMax(2, board, Players.TWO, -Infinity, +Infinity)
+    console.log(move.score)
+    console.log(move.index)
     return {
-      i: i,
-      j: j,
+      i: move.index[0],
+      j: move.index[1],
     }
   }
 
-  miniMax() {
+  miniMax(depth, board, maxPlayer, alpha, beta) {
+    let possibleIndex = this.orderedPossibilities(board)
+    let bestPosition = [-1, -1]
+    let score
+
+    if (possibleIndex.length == 0 || depth == 0 || board.winner() != null) {
+      score = this.evaluate(maxPlayer, board)
+      return {
+        score: score,
+        index: bestPosition
+      }
+    } else {
+      for (let i=0; i < possibleIndex.length; i++) {
+        let index = possibleIndex[i]
+        let newBoard = board.addPiece(index[0], index[1])
+        if (board.currentPlayer() == maxPlayer) {
+          score = this.miniMax(depth-1, newBoard, maxPlayer, alpha, beta).score
+          if (score > alpha) {
+            alpha = score
+            bestPosition = index
+          }
+        } else {
+          score = this.miniMax(depth-1, newBoard, maxPlayer, alpha, beta).score
+          if (score < beta) {
+            beta = score
+            bestPosition = index
+          }
+        }
+        if (alpha > beta) {
+          break
+        }
+      }
+      return {
+        score: (board.currentPlayer() == maxPlayer) ? alpha : beta,
+        index: bestPosition
+      }
+    }
+  }
+
+  orderedPossibilities(board) {
+    let i = ((Enum.BOARD_COLUMNS_NUMBER / 2) | 0) - 1
+    let j = (Enum.BOARD_ROWS_NUMBER / 2) | 0
+    let directions = [[1,0], [0,-1], [-1,0], [0,1]]
+    let n = 0, index = 0, distance = 1, direction = 0, outerInteration = 0
+    let keyArray = []
+    while (n < Enum.BOARD_COLUMNS_NUMBER * Enum.BOARD_ROWS_NUMBER) {
+      for(let k=0; k<distance; k++) {
+        n ++
+        const isPossible = board.get(i,j) == Players.NONE
+        if (isPossible) {
+          keyArray[index++] = [i, j]
+        }
+        let step = directions[direction % 4]
+        i += step[0]
+        j += step[1]
+      }
+      direction++
+      if (outerInteration > 0 && outerInteration%2 == 0) {
+        distance++
+      }
+      outerInteration++
+    }
+    return keyArray
+  }
+
+  possibilities(board) {
+    return this.orderedPossibilities(board)
   }
 
   evaluate(maxPlayer, board) {
@@ -28,7 +94,7 @@ class Ai {
         let maxSet = board.getMaxSet(i, j)
         let freeSides = maxSet[1]
         maxSet = maxSet[0]
-        if (maxSet.size >= 3) {
+        if (maxSet.size >= 1) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
           if (maxSet.size >= 5) { setGrade *= 100 }
           if (playerId !== maxPlayer) { setGrade *= -1 }
