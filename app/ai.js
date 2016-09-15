@@ -7,11 +7,12 @@ class Ai {
   }
 
   think(board) {
-    let move = this.miniMax(2, board, board.currentPlayer, -Infinity, +Infinity).index
-    console.log(move)
+    let move = this.miniMax(2, board, Players.TWO, -Infinity, +Infinity)
+    console.log(move.score)
+    console.log(move.index)
     return {
-      i: move[0],
-      j: move[1],
+      i: move.index[0],
+      j: move.index[1],
     }
   }
 
@@ -19,7 +20,7 @@ class Ai {
     let possibleIndex = this.orderedPossibilities(board)
     let bestPosition = [-1, -1]
     let score
-    
+
     if (possibleIndex.length == 0 || depth == 0 || board.winner() != null) {
       score = this.evaluate(maxPlayer, board)
       return {
@@ -79,7 +80,7 @@ class Ai {
     }
     return keyArray
   }
-  
+
   possibilities(board) {
     return this.orderedPossibilities(board)
   }
