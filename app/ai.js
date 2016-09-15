@@ -94,7 +94,7 @@ class Ai {
         let maxSet = board.getMaxSet(i, j)
         let freeSides = maxSet[1]
         maxSet = maxSet[0]
-        if (maxSet.size >= 3) {
+        if (maxSet.size >= 1) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
           if (maxSet.size >= 5) { setGrade *= 100 }
           if (playerId !== maxPlayer) { setGrade *= -1 }
