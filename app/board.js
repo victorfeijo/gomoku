@@ -131,6 +131,16 @@ class Board {
     }
     return winnerId
   }
+
+  isFirstPlay(player) {
+    let visitedCells = 0
+
+    this.forEach((playerId, i, j) => {
+      if (playerId === player) { visitedCells++ }
+    })
+
+    return visitedCells === 0
+  }
 }
 
 export default Board

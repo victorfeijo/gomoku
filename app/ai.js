@@ -7,6 +7,9 @@ class Ai {
   }
 
   think(board) {
+
+    if (board.isFirstPlay(Players.TWO)) { return this.firstMove(board) }
+
     let move = this.miniMax(2, board, Players.TWO, -Infinity, +Infinity)
     console.log(move.score)
     console.log(move.index)
@@ -112,6 +115,21 @@ class Ai {
       grade += 2 * moves
     }
     return grade
+  }
+
+  firstMove(board) {
+    let player = board.get(7, 7)
+    if (player === Players.NONE) {
+      return {
+        i: 7,
+        j: 7
+      }
+    } else {
+      return {
+        i: 7,
+        j: 8
+      }
+    }
   }
 }
 
