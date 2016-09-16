@@ -8,29 +8,39 @@ class Ai {
 
   think(board) {
 
-    if (board.isFirstPlay(Players.TWO)) { return this.firstMove(board) }
+    // if (board.isFirstPlay(Players.TWO)) { return this.firstMove(board) }
 
-    let move = this.miniMax(2, board, Players.TWO, -Infinity, +Infinity)
+    let time = new Date().getTime()
+    let move = this.miniMax(2, board, board.switchPlayer(board.currentPlayer()), -Infinity, +Infinity)
+    console.log('MiniMax took ' + ((new Date().getTime() - time)/1000) + 's.')
     console.log(move.score)
     console.log(move.index)
     return {
       i: move.index[0],
       j: move.index[1],
     }
+
   }
 
   miniMax(depth, board, maxPlayer, alpha, beta) {
-    let possibleIndex = this.orderedPossibilities(board)
     let bestPosition = [-1, -1]
     let score
 
-    if (possibleIndex.length == 0 || depth == 0 || board.winner() != null) {
+    if (depth == 0 || board.winner() != null) {
       score = this.evaluate(maxPlayer, board)
       return {
         score: score,
         index: bestPosition
       }
     } else {
+      let possibleIndex = this.orderedPossibilities(board)
+      if (possibleIndex.length == 0) {
+        score = this.evaluate(maxPlayer, board)
+        return {
+          score: score,
+          index: bestPosition
+        }
+      }
       for (let i=0; i < possibleIndex.length; i++) {
         let index = possibleIndex[i]
         let newBoard = board.addPiece(index[0], index[1])
@@ -39,12 +49,18 @@ class Ai {
           if (score > alpha) {
             alpha = score
             bestPosition = index
+          } else if (score === alpha) {
+            const randomBit = Math.round(Math.random())
+            if (randomBit) { bestPosition = index }
           }
         } else {
           score = this.miniMax(depth-1, newBoard, maxPlayer, alpha, beta).score
           if (score < beta) {
             beta = score
             bestPosition = index
+          } else if (score === beta) {
+            const randomBit = Math.round(Math.random())
+            if (randomBit) { bestPosition = index }
           }
         }
         if (alpha > beta) {
@@ -59,17 +75,26 @@ class Ai {
   }
 
   orderedPossibilities(board) {
-    let i = ((Enum.BOARD_COLUMNS_NUMBER / 2) | 0) - 1
-    let j = (Enum.BOARD_ROWS_NUMBER / 2) | 0
+    let i = board.lastX()
+    let j = board.lastY()
     let directions = [[1,0], [0,-1], [-1,0], [0,1]]
-    let n = 0, index = 0, distance = 1, direction = 0, outerInteration = 0
-    let keyArray = []
+    let n = 0, distance = 1, direction = 0, outerInteration = 0
+    let highPriority = [], lowPriority = []
     while (n < Enum.BOARD_COLUMNS_NUMBER * Enum.BOARD_ROWS_NUMBER) {
       for(let k=0; k<distance; k++) {
-        n ++
+        if (
+          i >= 0 && i < Enum.BOARD_COLUMNS_NUMBER &&
+          j >= 0 && j < Enum.BOARD_ROWS_NUMBER
+        ) {
+          n ++
+        }
         const isPossible = board.get(i,j) == Players.NONE
         if (isPossible) {
-          keyArray[index++] = [i, j]
+          if (board.hasPiecesNearby(i,j)) {
+            highPriority.push([i, j])
+          } else {
+            lowPriority.push([i, j])
+          }
         }
         let step = directions[direction % 4]
         i += step[0]
@@ -81,11 +106,7 @@ class Ai {
       }
       outerInteration++
     }
-    return keyArray
-  }
-
-  possibilities(board) {
-    return this.orderedPossibilities(board)
+    return highPriority.concat(lowPriority)
   }
 
   evaluate(maxPlayer, board) {
@@ -99,7 +120,8 @@ class Ai {
         maxSet = maxSet[0]
         if (maxSet.size >= 1) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
-          if (maxSet.size >= 5) { setGrade *= 100 }
+          if (maxSet.size >= 5) { setGrade *= 25000 }
+          setGrade += 10 - (Math.abs(i-7)) - (Math.abs(j-7))
           if (playerId !== maxPlayer) { setGrade *= -1 }
           grade += setGrade
           maxSet.forEach((cell) => { visitedCells.add(cell) })
@@ -110,26 +132,11 @@ class Ai {
       }
     })
     if (board.winner() === maxPlayer) {
-      grade -= 2 * moves
+      grade -= 1000 * moves
     } else if (board.winner() === board.switchPlayer(maxPlayer)) {
-      grade += 2 * moves
+      grade += 1000 * moves
     }
     return grade
-  }
-
-  firstMove(board) {
-    let player = board.get(7, 7)
-    if (player === Players.NONE) {
-      return {
-        i: 7,
-        j: 7
-      }
-    } else {
-      return {
-        i: 7,
-        j: 8
-      }
-    }
   }
 }
 
