@@ -2,7 +2,7 @@ import { Enum, Players } from './enum'
 
 class Board {
 
-  constructor(cells, player, size, winner = null) {
+  constructor(cells, player, size, winner = null, lastX = 7, lastY = 7) {
     // class constructor
     this.cells = cells
     if (cells == null){
@@ -23,6 +23,8 @@ class Board {
     this.size = () => { return size }
 
     this.winner = () => { return winner }
+    this.lastX = () => { return lastX }
+    this.lastY = () => { return lastY }
   }
 
   forEach(func) {
@@ -58,7 +60,7 @@ class Board {
       let newPlayer = this.switchPlayer(player)
       let newSize = this.size()+1
       let winner = this.getWinner(x, y, newCells, newSize)
-      return new Board(newCells, newPlayer, newSize, winner)
+      return new Board(newCells, newPlayer, newSize, winner, x, y)
     }
     return this
   }
@@ -105,6 +107,10 @@ class Board {
         }
         if (cells.get(key) == Players.NONE) {
           freeSides ++
+          key = this.formatKey(x+path[0], y+path[1])
+          if (cells.get(key) === initialPlayerId) {
+            freeSides++
+          }
         }
         if (i == 0) {
           path = path.map(n => { return n*-1 })
@@ -130,6 +136,43 @@ class Board {
       winnerId = Players.NONE
     }
     return winnerId
+  }
+
+  isFirstPlay(player) {
+    let visitedCells = 0
+
+    this.forEach((playerId, i, j) => {
+      if (playerId === player) { visitedCells++ }
+    })
+
+    return visitedCells === 0
+  }
+
+  hasPiecesNearby(iX, iY) {
+    // return true if there are pieces on the received position or adjacencies
+    let key = this.formatKey(iX, iY)
+    if (this.cells.get(key) != Players.NONE) {
+      return true
+    }
+    let pieceFound = false
+    const searchPaths = [[0, 1], [1, 0], [1, 1], [1, -1]]
+    searchPaths.forEach(path => {
+      for (let i = 0; i < 2; i++) {
+        let x = iX, y = iY
+        x += path[0]
+        y += path[1]
+        key = this.formatKey(x, y)
+        if (this.cells.get(key) != Players.NONE && this.cells.get(key) != null) {
+          pieceFound = true
+        }
+        if (i == 0) {
+          path = path.map(n => { return n*-1 })
+          x = iX
+          y = iY
+        }
+      }
+    })
+    return pieceFound
   }
 }
 

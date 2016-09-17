@@ -26,9 +26,10 @@ class Gomoku {
     this.board = new Board()
     this.drawCells()
     if (this.isAiRound()) {
-      // TODO
-      const aiMove = this.ai.think(this.board)
-      this.addPiece(aiMove.i, aiMove.j)
+      setTimeout(() => {
+        const aiMove = this.ai.think(this.board)
+        this.addPiece(aiMove.i, aiMove.j)
+      }, 50)
     }
   }
 
@@ -138,7 +139,7 @@ class Gomoku {
       setTimeout(() => {
         const aiMove = this.ai.think(this.board)
         this.addPiece(aiMove.i, aiMove.j)
-      }, 0)
+      }, 50)
     }
   }
 
