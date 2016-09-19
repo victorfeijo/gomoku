@@ -8,21 +8,24 @@ const CELL_HEIGHT = Enum.BOARD_HEIGHT / Enum.BOARD_ROWS_NUMBER
 
 class Gomoku {
 
-  constructor() {}
+  constructor() {
+    this.ai = new Ai()
+    $('#reset').click(() => { this.reset() })
+  }
 
   setup() {
     // create board, pieces, set initial state to game, etc
-    $('#reset').hide()
-    $('#reset').click(() => { this.reset() })
     this.player = {}
-    this.player[Players.ONE] = new Player("Black", Type.HUMAN, "#222")
-    this.player[Players.TWO] = new Player("White", Type.AI, "#eee")
-    this.ai = new Ai()
-    this.drawBg()
+    const p1Type = confirm("Player 1 will be a human") ? Type.HUMAN : Type.AI
+    const p2Type = confirm("Player 2 will be an AI") ? Type.AI : Type.HUMAN
+    this.player[Players.ONE] = new Player("Black", p1Type, "#222")
+    this.player[Players.TWO] = new Player("White", p2Type, "#eee")
   }
 
   start() {
     // main game
+    $('#reset').hide()
+    this.drawBg()
     this.board = new Board()
     this.drawCells()
     if (this.isAiRound()) {
@@ -93,9 +96,6 @@ class Gomoku {
             }, Enum.ANIMATIONS_DURATION)
           },
           click: function(layer) {
-            $(this).animateLayer(layer, {
-              opacity: 0
-            }, Enum.ANIMATIONS_DURATION)
             gomoku.addPiece(i, j)
           },
         })
@@ -105,7 +105,13 @@ class Gomoku {
 
   drawPiece(i, j, playerId) {
     let color = this.player[playerId].color
+    let strkWidth = 0
+    if (this.board.lastX() == i && this.board.lastY() == j) {
+      strkWidth = 3
+    }
     $('canvas').drawArc({
+      strokeStyle: '#888',
+      strokeWidth: strkWidth,
       layer: true,
       draggable: false,
       x: CELL_WIDTH*(i+.5),
@@ -116,9 +122,9 @@ class Gomoku {
   }
 
   addPiece(i, j) {
-    this.board = this.board.addPiece(i, j)
     $('canvas').removeLayers()
     $('canvas').clearCanvas()
+    this.board = this.board.addPiece(i, j)
     this.drawBg()
     this.drawCells()
     let winner = this.board.winner()

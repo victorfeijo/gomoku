@@ -7,13 +7,10 @@ class Ai {
   }
 
   think(board) {
-
-    // if (board.isFirstPlay(Players.TWO)) { return this.firstMove(board) }
-
     let time = new Date().getTime()
-    let move = this.miniMax(2, board, board.switchPlayer(board.currentPlayer()), -Infinity, +Infinity)
+    let move = this.miniMax(2, board, board.currentPlayer(), -Infinity, +Infinity)
     console.log('MiniMax took ' + ((new Date().getTime() - time)/1000) + 's.')
-    console.log(move.score)
+    // console.log(move.score)
     console.log(move.index)
     return {
       i: move.index[0],
@@ -111,30 +108,27 @@ class Ai {
 
   evaluate(maxPlayer, board) {
     // returns a grade to the player based on the current state
-    let grade = 0, moves = 0
-    let visitedCells = new Set()
-    board.forEach((playerId, i, j) => {
-      if (playerId !== Players.NONE && !visitedCells.has([i,j])) {
-        let maxSet = board.getMaxSet(i, j)
-        let freeSides = maxSet[1]
-        maxSet = maxSet[0]
+    let grade = 0
+    board.sets().forEach((set) => {
+      if (set.player !== Players.NONE) {
+        let freeSides = set.freeSides
+        let maxSet = set.set
         if (maxSet.size >= 1) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
-          if (maxSet.size >= 5) { setGrade *= 25000 }
-          setGrade += 10 - (Math.abs(i-7)) - (Math.abs(j-7))
-          if (playerId !== maxPlayer) { setGrade *= -1 }
+          if (maxSet.size === 4 && freeSides > 1) { setGrade *= 1e8 }
+          if (maxSet.size >= 5) { setGrade *= 1e30 }
+          if (board.size() < 5) {
+            setGrade += 10 - (Math.abs(set.i-7)) - (Math.abs(set.j-7))
+          }
+          if (set.player !== maxPlayer) { setGrade *= -1 }
           grade += setGrade
-          maxSet.forEach((cell) => { visitedCells.add(cell) })
-          moves += maxSet.size
-        } else {
-          moves++
         }
       }
     })
     if (board.winner() === maxPlayer) {
-      grade -= 1000 * moves
+      grade -= 1e7 * board.size()
     } else if (board.winner() === board.switchPlayer(maxPlayer)) {
-      grade += 1000 * moves
+      grade += 1e7 * board.size()
     }
     return grade
   }

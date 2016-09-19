@@ -2,29 +2,43 @@ import { Enum, Players } from './enum'
 
 class Board {
 
-  constructor(cells, player, size, winner = null, lastX = 7, lastY = 7) {
+  constructor(
+    cells = null,
+    player = Math.round(Math.random()),
+    size = 0,
+    lastX = 7,
+    lastY = 7,
+    sets = new Immutable.Map(),
+    keyMap = new Immutable.Map()
+  ) {
     // class constructor
-    this.cells = cells
-    if (cells == null){
-      let emptyMapObj = {}
-      for (let i=0; i<Enum.BOARD_COLUMNS_NUMBER; i++)
-      for (let j=0; j<Enum.BOARD_ROWS_NUMBER; j++) {
-        let key = this.formatKey(i,j)
-        emptyMapObj[key] = Players.NONE
-      }
-      this.cells = new Immutable.Map(emptyMapObj)
-    }
-
-    if (player == null) { player = Math.round(Math.random()) }
-    if (winner != null) { player = Players.NONE }
-    this.currentPlayer = () => { return player }
-
-    size = size || 0
-    this.size = () => { return size }
-
-    this.winner = () => { return winner }
     this.lastX = () => { return lastX }
     this.lastY = () => { return lastY }
+    this.size = () => { return size }
+
+    this.cells = cells
+    if (cells == null) { this.cells = this.emptyCells() }
+    let newSets = this.getNewSets()
+    sets = this.updateSets(sets, keyMap, newSets)
+    keyMap = sets.keyMap
+    sets = sets.sets
+    let winner = this.getWinner(newSets)
+    if (winner != null) { player = Players.NONE }
+
+    this.currentPlayer = () => { return player }
+    this.winner = () => { return winner }
+    this.sets = () => { return sets }
+    this.keyMap = () => { return keyMap }
+  }
+
+  emptyCells() {
+    let emptyMapObj = {}
+    for (let i=0; i<Enum.BOARD_COLUMNS_NUMBER; i++)
+    for (let j=0; j<Enum.BOARD_ROWS_NUMBER; j++) {
+      let key = this.formatKey(i,j)
+      emptyMapObj[key] = Players.NONE
+    }
+    return new Immutable.Map(emptyMapObj)
   }
 
   forEach(func) {
@@ -33,6 +47,41 @@ class Board {
     for(let j=0; j<Enum.BOARD_COLUMNS_NUMBER; j++) {
       let key = this.formatKey(i, j)
       func(this.cells.get(key), i, j)
+    }
+  }
+
+  updateSets(sets, keyMap, newSets) {
+    let updatedKeys = new Set()
+    newSets.opponentNeighbours.forEach((key) => {
+      (keyMap.get(key) || []).forEach((id) => {
+        sets = sets.delete(id)
+      })
+      keyMap = keyMap.delete(key)
+      updatedKeys.add(key)
+    })
+    newSets.sets.forEach((set) => {
+      set.set.forEach((key) => {
+        (keyMap.get(key) || []).forEach((id) => {
+          sets = sets.delete(id)
+        })
+        keyMap = keyMap.delete(key)
+        updatedKeys.add(key)
+      })
+    })
+    updatedKeys.forEach((key) => {
+      let index = this.unformatKey(key)
+      this.getNewSets(index[0], index[1]).sets.forEach((set) => {
+        set.set.forEach((key) => {
+          let keySet = keyMap.get(key) || new Immutable.Set()
+          keyMap = keyMap.set(key, keySet.add(set.id))
+        })
+        sets = sets.set(set.id, set)
+      })
+    })
+
+    return {
+      sets: sets,
+      keyMap: keyMap
     }
   }
 
@@ -59,8 +108,7 @@ class Board {
       let newCells = this.cells.set(key, player)
       let newPlayer = this.switchPlayer(player)
       let newSize = this.size()+1
-      let winner = this.getWinner(x, y, newCells, newSize)
-      return new Board(newCells, newPlayer, newSize, winner, x, y)
+      return new Board(newCells, newPlayer, newSize, x, y, this.sets(), this.keyMap())
     }
     return this
   }
@@ -77,6 +125,13 @@ class Board {
     return this.fixLength(x, len) + this.fixLength(y, len)
   }
 
+  unformatKey(key) {
+    return {
+      i: parseInt(key.substring(1,3)),
+      j: parseInt(key.substring(4,6))
+    }
+  }
+
   fixLength(num, length) {
     // transform number into a string with the determined length
     num = num.toString()
@@ -86,21 +141,29 @@ class Board {
     return '.' + num
   }
 
-  getMaxSet(iX, iY, cells = this.cells) {
-    // return an array containing the biggest set of the same player
-    // and the number of adjacent free sides
-    let maxSet = [new Set(), 0]
+  getNewSets(iX = this.lastX(), iY = this.lastY(), cells = this.cells) {
+    // returns an object containing (a set of objects containing a
+    // (set of the same player and the number of adjacent free sides)
+    // and the size of the bigest set)
+    let ret = {
+      opponentNeighbours: new Set(),
+      sets: new Immutable.Set(),
+      maxSize: 0,
+    }
     let key = this.formatKey(iX, iY)
     const initialPlayerId = cells.get(key)
+    if (initialPlayerId === Players.NONE) { return ret }
     const searchPaths = [[0, 1], [1, 0], [1, 1], [1, -1]]
     searchPaths.forEach(path => {
       let freeSides = 0
-      let currentSet = new Set()
+      let currentSet = new Immutable.Set()
+      let id = ''
       let x = iX, y = iY
       for (let i = 0; i < 2; i++) {
         key = this.formatKey(x, y)
         while (cells.get(key) === initialPlayerId) {
-          currentSet.add([x, y])
+          currentSet = currentSet.add(key)
+          id += '.' + key
           x += path[0]
           y += path[1]
           key = this.formatKey(x, y)
@@ -111,6 +174,8 @@ class Board {
           if (cells.get(key) === initialPlayerId) {
             freeSides++
           }
+        } else if (cells.get(key) == this.switchPlayer(initialPlayerId)) {
+          ret.opponentNeighbours.add(key)
         }
         if (i == 0) {
           path = path.map(n => { return n*-1 })
@@ -118,34 +183,34 @@ class Board {
           y = iY + path[1]
         }
       }
-      if (currentSet.size > maxSet[0].size) {
-        maxSet = [currentSet, freeSides]
+      if (currentSet.size > 1 || (ret.sets.size === 0 && path[0] === -1 && path[1] === 1)) {
+        ret.sets = ret.sets.add({
+          i: iX,
+          j: iY,
+          id: id,
+          set: currentSet,
+          freeSides: freeSides,
+          player: initialPlayerId,
+        })
+      }
+      if (currentSet.size > ret.maxSize) {
+        ret.maxSize = currentSet.size
       }
     })
-    return maxSet
+    return ret
   }
 
-  getWinner(lastX, lastY, cells, boardSize) {
+  getWinner(newSets) {
     // returns null or the id of the winner on the received conditions
     let winnerId = null
-    const key = this.formatKey(lastX, lastY)
-    const possibleWinnerId = cells.get(key)
-    if (this.getMaxSet(lastX, lastY, cells)[0].size >= 5) {
+    const possibleWinnerId = this.get(this.lastX(), this.lastY())
+    if (possibleWinnerId == Players.NONE) { return null }
+    if (newSets.maxSize >= 5) {
       winnerId = possibleWinnerId
-    } else if (boardSize == (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
+    } else if (this.size() === (Enum.BOARD_ROWS_NUMBER * Enum.BOARD_COLUMNS_NUMBER)) {
       winnerId = Players.NONE
     }
     return winnerId
-  }
-
-  isFirstPlay(player) {
-    let visitedCells = 0
-
-    this.forEach((playerId, i, j) => {
-      if (playerId === player) { visitedCells++ }
-    })
-
-    return visitedCells === 0
   }
 
   hasPiecesNearby(iX, iY) {
