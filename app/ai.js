@@ -120,7 +120,8 @@ class Ai {
         maxSet = maxSet[0]
         if (maxSet.size >= 1) {
           let setGrade = Math.pow(maxSet.size, 5) * (freeSides + 0.1)
-          if (maxSet.size >= 5) { setGrade *= 25000 }
+          if (maxSet.size === 4 && freeSides > 1) { setGrade *= 1e8 }
+          if (maxSet.size >= 5) { setGrade *= 1e30 }
           setGrade += 10 - (Math.abs(i-7)) - (Math.abs(j-7))
           if (playerId !== maxPlayer) { setGrade *= -1 }
           grade += setGrade
@@ -132,9 +133,9 @@ class Ai {
       }
     })
     if (board.winner() === maxPlayer) {
-      grade -= 1000 * moves
+      grade -= 1e7 * moves
     } else if (board.winner() === board.switchPlayer(maxPlayer)) {
-      grade += 1000 * moves
+      grade += 1e7 * moves
     }
     return grade
   }
